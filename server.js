@@ -31,6 +31,57 @@ const connectDB = async () => {
 
 connectDB();
 
+// Chat Message Schema
+const messageSchema = new mongoose.Schema({
+  text: String,
+  isAI: Boolean,
+  isUser: Boolean,
+  timestamp: { type: Date, default: Date.now }
+});
+
+const Message = mongoose.model('Message', messageSchema);
+
+// Chat endpoints
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+    
+    // Save user message
+    const userMessage = new Message({
+      text: message,
+      isUser: true,
+      timestamp: new Date()
+    });
+    await userMessage.save();
+
+    // Generate AI response (placeholder for now)
+    const aiResponse = "I understand your message: " + message + ". How can I help you further?";
+    
+    // Save AI response
+    const aiMessage = new Message({
+      text: aiResponse,
+      isAI: true,
+      timestamp: new Date()
+    });
+    await aiMessage.save();
+
+    res.json({ message: aiResponse });
+  } catch (error) {
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+app.get('/api/chat', async (req, res) => {
+  try {
+    const messages = await Message.find().sort({ timestamp: 1 });
+    res.json(messages);
+  } catch (error) {
+    console.error('Get chat history error:', error);
+    res.status(500).json({ error: 'Failed to get chat history' });
+  }
+});
+
 // Health Check Routes
 app.get('/', (req, res) => {
   res.json({ 
